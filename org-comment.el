@@ -278,7 +278,7 @@ or subtree."
 \\{org-comment-menu-mode-map}"
   (setq tabulated-list-sort-key nil)
   (add-hook 'tabulated-list-revert-hook
-	    #'org-comment-refresh-list))
+	    #'org-comment-refresh-list nil t))
 
 (defun org-comment-list-pop-to ()
   (interactive)
