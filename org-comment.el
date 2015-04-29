@@ -19,7 +19,7 @@
 
 ;;; Commentary:
 
-;; Provides a new link type for Org that allows you to create comments
+;; Provides a new link type for Org that allows you to create commentso
 ;; on arbitrary chunks of text.  The link prefix is "comment:".
 
 ;; Add comments with `org-comment-add-comment'.  Following the link
@@ -371,7 +371,7 @@ or subtree."
   "Face for comment links in org-mode.")
 
 (defun org-comment-colorize-links ()
-  "Colorize org-ref links."
+  "Colorize org-comment links."
   (hi-lock-mode 1)
   (highlight-regexp org-comment-re 'org-comment-face))
 
