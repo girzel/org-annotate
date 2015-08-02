@@ -125,7 +125,8 @@ only supports comment."
 
 (defun org-annotate-export-note (path desc format)
   (let ((export-func
-	 (intern-soft (format "org-annotate-%s-export-function" format))))
+	 (symbol-value
+	  (intern-soft (format "org-annotate-%s-export-function" format)))))
     (if (and export-func
 	     (fboundp export-func))
 	(funcall export-func path desc)
