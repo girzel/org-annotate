@@ -56,10 +56,12 @@
 (require 'cl-lib)
 (require 'tabulated-list)
 
-(org-add-link-type
- "note"
- #'org-annotate-display-note
- #'org-annotate-export-note)
+;;;###autoload
+(with-eval-after-load 'org
+  (org-add-link-type
+   "note"
+   #'org-annotate-display-note
+   #'org-annotate-export-note))
 
 (defgroup org-annotate nil
   "Annotation link type for Org."
@@ -123,6 +125,7 @@ only supports comment."
 	  (format-time-string "%FT%T%z" (current-time))
 	  path))
 
+;;;###autoload
 (defun org-annotate-export-note (path desc format)
   (let ((export-func
 	 (symbol-value
@@ -133,6 +136,7 @@ only supports comment."
       ;; If there's no function to handle the note, just delete it.
       desc)))
 
+;;;###autoload
 (defun org-annotate-display-note (linkstring)
   (when linkstring
     (with-current-buffer
