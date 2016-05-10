@@ -356,8 +356,7 @@ or subtree."
      (point) "\t")
     (org-reveal)))
 
-;; * John Kitchin additions
-;; ** Colorizing note links
+;; * Colorizing note links
 (defvar org-annotate-foreground "red"
   "Font color for notes.")
 
@@ -370,15 +369,48 @@ or subtree."
 
 (defface org-annotate-face
   `((t (:inherit org-link
-		 :weight bold
-		 :background ,org-annotate-background
-		 :foreground ,org-annotate-foreground)))
+        :weight bold
+        :background ,org-annotate-background
+        :foreground ,org-annotate-foreground)))
   "Face for note links in org-mode.")
 
+(defface org-annotate-text-face
+  '((t (:inherit default
+        :underline t)))
+  "Face for inline text of note links in org-mode.")
+
+(defface org-annotate-bracket-face
+  '((t (:inherit font-lock-comment-face)))
+  "Face for visible brackets of note links in org mode")
+
+(defvar org-annotate-font-lock-keywords
+  '(("\\[\\(\\[\\)\\(note:\\)\\([^]]+\\)\\(\\]\\)\\]"
+     (1 '(face org-annotate-bracket-face invisible nil) prepend)
+     (2 '(face bold invisible nil) prepend)
+     (3 '(face org-annotate-face invisible nil) prepend)
+     (4 '(face org-annotate-bracket-face invisible nil) prepend))
+    ("\\[\\(\\[\\)\\(note:\\)\\([^]]+\\)\\(\\]\\)\\[\\([^]]+\\)\\]\\]"
+     (1 '(face org-annotate-bracket-face invisible nil) prepend)
+     (2 '(face default invisible t) prepend)
+     (3 '(face org-annotate-face invisible nil) prepend)
+     (4 '(face org-annotate-bracket-face invisible nil) prepend)
+     (5 'org-annotate-text-face prepend)))
+  "Keywords for fontifying org-annotate notes")
+
+(defun org-annotate-activate-colored-links ()
+  (add-hook 'org-font-lock-set-keywords-hook #'org-annotate-colorize-links))
+
+(defun org-annotate-deactivate-colored-links ()
+  (remove-hook 'org-font-lock-set-keywords-hook #'org-annotate-colorize-links)
+  (when (derived-mode-p 'org-mode)
+    (org-mode)))
+
+;;activate by default
+(org-annotate-activate-colored-links)
+
 (defun org-annotate-colorize-links ()
-  "Colorize org-ref links."
-  (hi-lock-mode 1)
-  (highlight-regexp org-annotate-re 'org-annotate-face))
+  (dolist (el org-annotate-font-lock-keywords)
+    (add-to-list 'org-font-lock-extra-keywords el t)))
 
 ;; * Org-mode menu
 (defun org-annotate-org-menu ()
