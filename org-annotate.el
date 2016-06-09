@@ -117,11 +117,15 @@ only supports comment."
   (format "%s\\footnote{%s}" (or desc "") path))
 
 (defun org-annotate-export-odt-comment (path desc)
-  ;;; This doesn't currently work.
-  (format "%s<office:annotation><dc:creator>%s</dc:creator><dc:date>%s</dc:date><text:p>%s</text:p></office:annotation>"
-	  desc "I made this!"
-	  (format-time-string "%FT%T%z" (current-time))
-	  path))
+  (format (if desc
+              (let ((an-name (concat "__Annot_" (number-to-string (random)))))
+                (format "<office:annotation office:name=\"%s\"><dc:creator>%%s</dc:creator><dc:date>%%s</dc:date><text:list><text:list-item><text:p>%s</text:p></text:list-item></text:list></office:annotation>%s<office:annotation-end office:name=\"%s\"/>"
+                        an-name path desc an-name))
+            (format "<office:annotation><dc:creator>%%s</dc:creator><dc:date>%%s</dc:date><text:list><text:list-item><text:p>%s</text:p></text:list-item></text:list></office:annotation>"
+                    path))
+          (user-full-name)
+          (let ((ct (current-time)))
+            (concat (format-time-string "%FT%T." ct) (number-to-string (nth 2 ct))))))
 
 (defun org-annotate-export-note (path desc format)
   (let ((export-func
