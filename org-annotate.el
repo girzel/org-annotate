@@ -276,7 +276,7 @@ or subtree."
   "Mode for viewing Org notes as a tabular list.
 
 \\<org-annotate-list-mode-map>
-\\{org-annotate-menu-mode-map}"
+\\{org-annotate-list-mode-map}"
   (setq tabulated-list-sort-key nil)
   (add-hook 'tabulated-list-revert-hook
 	    #'org-annotate-refresh-list nil t))
