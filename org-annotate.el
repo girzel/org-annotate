@@ -56,10 +56,14 @@
 (require 'cl-lib)
 (require 'tabulated-list)
 
-(org-add-link-type
- "note"
- #'org-annotate-display-note
- #'org-annotate-export-note)
+;;;###autoload
+(if (fboundp 'org-link-set-parameters)
+    (org-link-set-parameters "note"
+                             :follow #'org-annotate-display-note
+                             :export #'org-annotate-export-note
+                             :activate-func #'org-annotate-activate-note)
+  (org-add-link-type "note" #'org-annotate-display-note #'org-annotate-export-note))
+
 
 (defgroup org-annotate nil
   "Annotation link type for Org."
@@ -103,6 +107,12 @@ supports marginpar, todonote, and footnote."
 only supports comment."
   :group 'org-annotate
   :type 'function)
+
+(defcustom org-annotate-special-brackets
+  '("《" " ‖ " "》")
+  "Brackets used for display of annotation boundaries.
+List of three strings."
+  :type '(list string string string))
 
 (defun org-annotate-export-html-tooltip (path desc)
   (format "<font color=\"red\"><abbr title=\"%s\" color=\"red\">COMMENT</abbr></font> %s" path (or desc "")))
@@ -276,7 +286,7 @@ or subtree."
   "Mode for viewing Org notes as a tabular list.
 
 \\<org-annotate-list-mode-map>
-\\{org-annotate-menu-mode-map}"
+\\{org-annotate-list-mode-map}"
   (setq tabulated-list-sort-key nil)
   (add-hook 'tabulated-list-revert-hook
 	    #'org-annotate-refresh-list nil t))
@@ -352,29 +362,54 @@ or subtree."
      (point) "\t")
     (org-reveal)))
 
-;; * John Kitchin additions
-;; ** Colorizing note links
-(defvar org-annotate-foreground "red"
-  "Font color for notes.")
 
-(defvar org-annotate-background "yellow"
-  "Background color for notes.")
-
-(defvar org-annotate-re
-  "\\(\\[\\[\\)?note:\\([^]]\\)+\\]?\\[?\\([^]]\\)*\\(\\]\\]\\)"
-  "Regex for note links. I am not sure how robust this is. It works so far.")
+;; * Font locking note links via activation function
+;; (John Kitchin would approve)
 
 (defface org-annotate-face
   `((t (:inherit org-link
-		 :weight bold
-		 :background ,org-annotate-background
-		 :foreground ,org-annotate-foreground)))
+        :weight bold)))
   "Face for note links in org-mode.")
 
-(defun org-annotate-colorize-links ()
-  "Colorize org-ref links."
-  (hi-lock-mode 1)
-  (highlight-regexp org-annotate-re 'org-annotate-face))
+(defface org-annotate-text-face
+  '((t (:inherit default)))
+  "Face for inline text of note links in org-mode.")
+
+(defface org-annotate-bracket-face
+  '((t (:inherit default)))
+  "Face for visible brackets of note links in org mode")
+
+(defun org-annotate-activate-note (start end _path bracketp)
+  "Add text properties to display annotation links in a special way"
+  (when bracketp
+    (save-match-data
+      (save-excursion
+        (goto-char start)
+        (when (re-search-forward org-bracket-link-analytic-regexp end t)
+          (let ((lb `(invisible nil
+                                face org-annotate-bracket-face
+                                display ,(car org-annotate-special-brackets)))
+                (mb `(invisible nil
+                                face org-annotate-bracket-face
+                                display ,(cadr org-annotate-special-brackets)))
+                (rb `(invisible nil
+                                face org-annotate-bracket-face
+                                display ,(nth 2 org-annotate-special-brackets)))
+                (note '(invisible nil face org-annotate-face))
+                (text '(invisible nil face org-annotate-text-face))
+                (inv '(invisible t)))
+
+            (add-text-properties start (1+ start) lb)
+            (add-text-properties (1+ start) (+ 2 start) inv)
+            (add-text-properties end (1- end) rb)
+            (add-text-properties (1- end) (- end 2) inv)
+            (add-text-properties (match-beginning 1) (match-end 1) inv)
+            (add-text-properties (match-beginning 3) (match-end 3) note)
+            (when (match-end 4) ; with desc
+              (progn
+                (add-text-properties (match-beginning 5) (match-end 5) text)
+                (add-text-properties (match-end 3) (1+ (match-end 3)) mb)
+                (add-text-properties (1+ (match-end 3)) (+ 2 (match-end 3)) inv)))))))))
 
 ;; * Org-mode menu
 (defun org-annotate-org-menu ()
