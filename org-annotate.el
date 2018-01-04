@@ -176,13 +176,20 @@ kill ring.  Bound to \"w\" in those buffers."
 ;;;###autoload
 (defun org-annotate-add-note ()
   (interactive)
-  (if (use-region-p)
+  (let ((org-link-escape-chars nil))
+    (cond
+     ((and (org-in-regexp org-bracket-link-analytic-regexp 1)
+           (equal "note" (match-string 2)))
+      (org-insert-link)) ; edit note
+     ((use-region-p)
       (let ((selected-text
-	     (buffer-substring (region-beginning) (region-end))))
+             (buffer-substring (region-beginning) (region-end))))
         (setf (buffer-substring (region-beginning) (region-end))
-              (format "[[note:%s][%s]]"
-                      (read-string "Note: ") selected-text)))
-  (insert (format "[[note:%s]]" (read-string "Note: ")))))
+              (org-make-link-string
+               (concat "note:" (read-string "Note: "))
+               selected-text))))
+     (t (insert (org-make-link-string
+                 (concat "note:" (read-string "Note: "))))))))
 
 ;; The purpose of making this buffer-local is defeated by the fact
 ;; that we only have one *Org Annotations List* buffer!
