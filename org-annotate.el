@@ -145,7 +145,7 @@ List of three strings."
 	     (fboundp export-func))
 	(funcall export-func path desc)
       ;; If there's no function to handle the note, just delete it.
-      desc)))
+      (or desc ""))))
 
 (defun org-annotate-display-note (linkstring)
   (when linkstring
