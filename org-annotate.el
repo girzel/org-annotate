@@ -56,14 +56,12 @@
 (require 'cl-lib)
 (require 'tabulated-list)
 
-;;;###autoload
 (if (fboundp 'org-link-set-parameters)
     (org-link-set-parameters "note"
                              :follow #'org-annotate-display-note
                              :export #'org-annotate-export-note
                              :activate-func #'org-annotate-activate-note)
   (org-add-link-type "note" #'org-annotate-display-note #'org-annotate-export-note))
-
 
 (defgroup org-annotate nil
   "Annotation link type for Org."
