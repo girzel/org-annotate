@@ -106,11 +106,13 @@ only supports comment."
   :group 'org-annotate
   :type 'function)
 
-(defcustom org-annotate-special-brackets
-  '("《" " ‖ " "》")
+(defcustom org-annotate-special-brackets nil
   "Brackets used for display of annotation boundaries.
-List of three strings."
-  :type '(list string string string))
+If non-nil, it should be a list of three strings to be used as
+left bracket, middle separator, and right bracket."
+  :type '(choice
+	  (const :tag "None" nil)
+	  (list string string string)))
 
 (defun org-annotate-export-html-tooltip (path desc)
   (format "<font color=\"red\"><abbr title=\"%s\" color=\"red\">COMMENT</abbr></font> %s" path (or desc "")))
@@ -390,7 +392,7 @@ or subtree."
 
 (defun org-annotate-activate-note (start end _path bracketp)
   "Add text properties to display annotation links in a special way"
-  (when bracketp
+  (when (and org-annotate-special-brackets bracketp)
     (save-match-data
       (save-excursion
         (goto-char start)
