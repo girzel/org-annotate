@@ -56,14 +56,12 @@
 (require 'cl-lib)
 (require 'tabulated-list)
 
-;;;###autoload
 (if (fboundp 'org-link-set-parameters)
     (org-link-set-parameters "note"
                              :follow #'org-annotate-display-note
                              :export #'org-annotate-export-note
                              :activate-func #'org-annotate-activate-note)
   (org-add-link-type "note" #'org-annotate-display-note #'org-annotate-export-note))
-
 
 (defgroup org-annotate nil
   "Annotation link type for Org."
@@ -145,7 +143,7 @@ List of three strings."
 	     (fboundp export-func))
 	(funcall export-func path desc)
       ;; If there's no function to handle the note, just delete it.
-      desc)))
+      (or desc ""))))
 
 (defun org-annotate-display-note (linkstring)
   (when linkstring
