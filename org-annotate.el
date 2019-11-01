@@ -396,31 +396,24 @@ or subtree."
     (save-match-data
       (save-excursion
         (goto-char start)
-        (when (re-search-forward org-bracket-link-analytic-regexp end t)
-          (let ((lb `(invisible nil
-                                face org-annotate-bracket-face
-                                display ,(car org-annotate-special-brackets)))
-                (mb `(invisible nil
-                                face org-annotate-bracket-face
-                                display ,(cadr org-annotate-special-brackets)))
-                (rb `(invisible nil
-                                face org-annotate-bracket-face
-                                display ,(nth 2 org-annotate-special-brackets)))
-                (note '(invisible nil face org-annotate-face))
-                (text '(invisible nil face org-annotate-text-face))
-                (inv '(invisible t)))
-
-            (add-text-properties start (1+ start) lb)
-            (add-text-properties (1+ start) (+ 2 start) inv)
-            (add-text-properties end (1- end) rb)
-            (add-text-properties (1- end) (- end 2) inv)
-            (add-text-properties (match-beginning 1) (match-end 1) inv)
-            (add-text-properties (match-beginning 3) (match-end 3) note)
-            (when (match-end 4) ; with desc
-              (progn
-                (add-text-properties (match-beginning 5) (match-end 5) text)
-                (add-text-properties (match-end 3) (1+ (match-end 3)) mb)
-                (add-text-properties (1+ (match-end 3)) (+ 2 (match-end 3)) inv)))))))))
+        (when (looking-at org-link-bracket-re)
+          (add-text-properties start (+ 2 start)
+                               `(invisible nil
+                                           face org-annotate-bracket-face
+                                           display ,(nth 0 org-annotate-special-brackets)))
+          (add-text-properties (- end 2) end
+                               `(invisible nil
+                                           face org-annotate-bracket-face
+                                           display ,(nth 2 org-annotate-special-brackets)))
+          (add-text-properties (match-beginning 1) (match-end 1)
+                               '(invisible nil face org-annotate-face))
+          (when (match-end 2) ; with desc
+            (add-text-properties (match-beginning 2) (match-end 2)
+                                 '(invisible nil face org-annotate-text-face))
+            (add-text-properties (match-end 1) (match-beginning 2)
+                                 `(invisible nil
+                                             face org-annotate-bracket-face
+                                             display ,(nth 1 org-annotate-special-brackets)))))))))
 
 ;; * Org-mode menu
 (defun org-annotate-org-menu ()
