@@ -176,20 +176,19 @@ kill ring.  Bound to \"w\" in those buffers."
 ;;;###autoload
 (defun org-annotate-add-note ()
   (interactive)
-  (let ((org-link-escape-chars nil))
-    (cond
-     ((and (org-in-regexp org-bracket-link-analytic-regexp 1)
-           (equal "note" (match-string 2)))
-      (org-insert-link)) ; edit note
-     ((use-region-p)
-      (let ((selected-text
-             (buffer-substring (region-beginning) (region-end))))
-        (setf (buffer-substring (region-beginning) (region-end))
-              (org-make-link-string
-               (concat "note:" (read-string "Note: "))
-               selected-text))))
-     (t (insert (org-make-link-string
-                 (concat "note:" (read-string "Note: "))))))))
+  (cond
+   ((and (org-in-regexp org-link-bracket-re 1)
+         (equal "note" (car (split-string (match-string 1) ":"))))
+    (org-insert-link)) ; edit note
+   ((use-region-p)
+    (let ((selected-text
+           (buffer-substring (region-beginning) (region-end))))
+      (setf (buffer-substring (region-beginning) (region-end))
+            (org-link-make-string
+             (concat "note:" (read-string "Note: "))
+             selected-text))))
+   (t (insert (org-link-make-string
+               (concat "note:" (read-string "Note: ")))))))
 
 ;; The purpose of making this buffer-local is defeated by the fact
 ;; that we only have one *Org Annotations List* buffer!
@@ -238,9 +237,9 @@ or subtree."
 		      (point-max)))
 	       links)
 	  (goto-char beg)
-	  (while (re-search-forward org-bracket-link-regexp end t)
+	  (while (re-search-forward org-link-bracket-re end t)
 	    (let ((path (match-string-no-properties 1))
-		  (text (match-string-no-properties 3))
+		  (text (match-string-no-properties 2))
 		  start)
 	      (when (string-match-p "\\`note:" path)
 		(setq path
