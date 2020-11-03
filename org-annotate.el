@@ -176,20 +176,19 @@ kill ring.  Bound to \"w\" in those buffers."
 ;;;###autoload
 (defun org-annotate-add-note ()
   (interactive)
-  (let ((org-link-escape-chars nil))
-    (cond
-     ((and (org-in-regexp org-bracket-link-analytic-regexp 1)
-           (equal "note" (match-string 2)))
-      (org-insert-link)) ; edit note
-     ((use-region-p)
-      (let ((selected-text
-             (buffer-substring (region-beginning) (region-end))))
-        (setf (buffer-substring (region-beginning) (region-end))
-              (org-make-link-string
-               (concat "note:" (read-string "Note: "))
-               selected-text))))
-     (t (insert (org-make-link-string
-                 (concat "note:" (read-string "Note: "))))))))
+  (cond
+   ((and (org-in-regexp org-link-bracket-re 1)
+         (equal "note" (car (split-string (match-string 1) ":"))))
+    (org-insert-link)) ; edit note
+   ((use-region-p)
+    (let ((selected-text
+           (buffer-substring (region-beginning) (region-end))))
+      (setf (buffer-substring (region-beginning) (region-end))
+            (org-link-make-string
+             (concat "note:" (read-string "Note: "))
+             selected-text))))
+   (t (insert (org-link-make-string
+               (concat "note:" (read-string "Note: ")))))))
 
 ;; The purpose of making this buffer-local is defeated by the fact
 ;; that we only have one *Org Annotations List* buffer!
@@ -238,9 +237,9 @@ or subtree."
 		      (point-max)))
 	       links)
 	  (goto-char beg)
-	  (while (re-search-forward org-bracket-link-regexp end t)
+	  (while (re-search-forward org-link-bracket-re end t)
 	    (let ((path (match-string-no-properties 1))
-		  (text (match-string-no-properties 3))
+		  (text (match-string-no-properties 2))
 		  start)
 	      (when (string-match-p "\\`note:" path)
 		(setq path
@@ -396,31 +395,24 @@ or subtree."
     (save-match-data
       (save-excursion
         (goto-char start)
-        (when (re-search-forward org-bracket-link-analytic-regexp end t)
-          (let ((lb `(invisible nil
-                                face org-annotate-bracket-face
-                                display ,(car org-annotate-special-brackets)))
-                (mb `(invisible nil
-                                face org-annotate-bracket-face
-                                display ,(cadr org-annotate-special-brackets)))
-                (rb `(invisible nil
-                                face org-annotate-bracket-face
-                                display ,(nth 2 org-annotate-special-brackets)))
-                (note '(invisible nil face org-annotate-face))
-                (text '(invisible nil face org-annotate-text-face))
-                (inv '(invisible t)))
-
-            (add-text-properties start (1+ start) lb)
-            (add-text-properties (1+ start) (+ 2 start) inv)
-            (add-text-properties end (1- end) rb)
-            (add-text-properties (1- end) (- end 2) inv)
-            (add-text-properties (match-beginning 1) (match-end 1) inv)
-            (add-text-properties (match-beginning 3) (match-end 3) note)
-            (when (match-end 4) ; with desc
-              (progn
-                (add-text-properties (match-beginning 5) (match-end 5) text)
-                (add-text-properties (match-end 3) (1+ (match-end 3)) mb)
-                (add-text-properties (1+ (match-end 3)) (+ 2 (match-end 3)) inv)))))))))
+        (when (looking-at org-link-bracket-re)
+          (add-text-properties start (+ 2 start)
+                               `(invisible nil
+                                           face org-annotate-bracket-face
+                                           display ,(nth 0 org-annotate-special-brackets)))
+          (add-text-properties (- end 2) end
+                               `(invisible nil
+                                           face org-annotate-bracket-face
+                                           display ,(nth 2 org-annotate-special-brackets)))
+          (add-text-properties (match-beginning 1) (match-end 1)
+                               '(invisible nil face org-annotate-face))
+          (when (match-end 2) ; with desc
+            (add-text-properties (match-beginning 2) (match-end 2)
+                                 '(invisible nil face org-annotate-text-face))
+            (add-text-properties (match-end 1) (match-beginning 2)
+                                 `(invisible nil
+                                             face org-annotate-bracket-face
+                                             display ,(nth 1 org-annotate-special-brackets)))))))))
 
 ;; * Org-mode menu
 (defun org-annotate-org-menu ()
