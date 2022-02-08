@@ -85,34 +85,23 @@ buffers to Org table format."
   :group 'org-annotate
   :type 'string)
 
-(defcustom org-annotate-html-export-function
-  #'org-annotate-export-html-tooltip
-  "The HTML export style for Org notes, as a symbol. Currently
-only supports tooltip."
+(defcustom org-annotate-export-functions
+  '((html . org-annotate-export-html-tooltip)
+    (latex . org-annotate-export-latex-marginpar)
+    (odt . org-annotate-export-odt-comment))
+  "Alist mapping org-export backends to export functions."
   :group 'org-annotate
-  :type 'function)
+  :type '(alist :key-type (symbol :tag "Backend")
+                :value-type function))
 
-(defcustom org-annotate-latex-export-function
-  #'org-annotate-export-latex-marginpar
-  "The LaTeX export style for Org notes, as a symbol. Currently
-supports marginpar, todonote, and footnote."
-  :group 'org-annotate
-  :type 'function)
-
-(defcustom org-annotate-odt-export-function
-  #'org-annotate-export-odt-comment
-  "The ODT export style for Org notes, as a symbol.  Currently
-only supports comment."
-  :group 'org-annotate
-  :type 'function)
 
 (defcustom org-annotate-special-brackets nil
   "Brackets used for display of annotation boundaries.
 If non-nil, it should be a list of three strings to be used as
 left bracket, middle separator, and right bracket."
   :type '(choice
-	  (const :tag "None" nil)
-	  (list string string string)))
+	      (const :tag "None" nil)
+	      (list string string string)))
 
 (defun org-annotate-export-html-tooltip (path desc)
   (format "<font color=\"red\"><abbr title=\"%s\" color=\"red\">COMMENT</abbr></font> %s" path (or desc "")))
@@ -139,11 +128,10 @@ left bracket, middle separator, and right bracket."
 
 (defun org-annotate-export-note (path desc format)
   (let ((export-func
-	 (symbol-value
-	  (intern-soft (format "org-annotate-%s-export-function" format)))))
+         (alist-get format org-annotate-export-functions)))
     (if (and export-func
-	     (fboundp export-func))
-	(funcall export-func path desc)
+	         (fboundp export-func))
+	    (funcall export-func path desc)
       ;; If there's no function to handle the note, just delete it.
       (or desc ""))))
 
